@@ -1,0 +1,4 @@
+*.pc
+build
+lib
+Makefile
