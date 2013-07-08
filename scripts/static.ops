@@ -1,0 +1,8 @@
+import("data_collection")
+
+loadComponent("static","Static_collection")
+
+setActivity("static", 0, 99, ORO_SCHED_RT)
+
+static.configure
+static.start
