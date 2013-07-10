@@ -6,6 +6,9 @@
 #include <sensor_msgs/typekit/Types.hpp>
 #include <Eigen/Geometry>
 
+#include <kuka_lwr_fri/friComm.h>
+#include <kuka_lwr_fri/typekit/Types.hpp>
+
 using namespace RTT;
 
 class Static_collection : public RTT::TaskContext{
@@ -22,6 +25,12 @@ class Static_collection : public RTT::TaskContext{
     sensor_msgs::JointState joint_state;
     InputPort<lwr_fri::FriJointState> port_fri_joint_state;
     lwr_fri::FriJointState fri_joint_state;
+
+    InputPort<tFriKrlData> port_from_krl;
+    OutputPort<tFriKrlData> port_to_krl;
+
+    tFriKrlData from_krl;
+    tFriKrlData to_krl;
 
     std::vector< Eigen::Matrix<float, 7, 1> > position;
     std::vector< Eigen::Matrix<float, 7, 1> > torque;

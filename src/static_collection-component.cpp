@@ -10,10 +10,21 @@ Static_collection::Static_collection(std::string const& name) : TaskContext(name
   //FriJointState
   this->addPort("FriJointState", port_fri_joint_state);
 
+  this->addPort("fromKRL", port_from_krl);
+  this->addPort("toKRL", port_to_krl);
+
   this->addProperty("Filename", filename);
 }
 
 bool Static_collection::configureHook(){
+
+  for (size_t ii(0); ii < (size_t) FRI_USER_SIZE; ++ii) {
+    to_krl.realData[ii] = 0.0f;
+    to_krl.intData[ii] = 0;
+  }
+  to_krl.boolData = 0;
+  to_krl.fill = 0;
+
   return true;
 }
 
@@ -23,30 +34,9 @@ bool Static_collection::startHook(){
 
 void Static_collection::updateHook(){
 
-  char in;
-  std::cin  >> in;
-  
-   if (in == 'q') {
-    //Stop and Write Data
-    std::cout << "Stopping" << std::endl;
+  port_from_krl.read(from_krl);  
 
-    std::ofstream f;
-    f.open (filename.c_str());
-
-    for (size_t ii(0); ii < (size_t) position.size(); ++ii) {
-	for (size_t jj(0); jj < (size_t) 7; ++jj) {
-          f << position[ii][jj] << " ";
-        }
-	for (size_t jj(0); jj < (size_t) 7; ++jj) {
-          f << torque[ii][jj] << " ";
-        }
-	for (size_t jj(0); jj < (size_t) 7; ++jj) {
-          f << ext_torque[ii][jj] << " ";
-        }
-        f << "\n";
-    }
-   }
-   else {
+   if (from_krl.intData[15] == 1 && to_krl.intData[15] == 0) {
     //Read Data
     port_joint_state.read(joint_state);
     port_fri_joint_state.read(fri_joint_state);
@@ -66,13 +56,37 @@ void Static_collection::updateHook(){
     position.push_back(cur_pos);
     torque.push_back(cur_torque);
     ext_torque.push_back(cur_ext_torque);
+    
+    to_krl.intData[15] = 1;
+    port_to_krl.write(to_krl);
+   }
+  else if (from_krl.intData[15] == 0 && to_krl.intData[15] == 1) {
+    to_krl.intData[15] = 0;
+    port_to_krl.write(to_krl);
+  }
 
     this->trigger();
-   }
   
 }
 
 void Static_collection::stopHook() {
+
+   std::ofstream f;
+    f.open (filename.c_str());
+
+    for (size_t ii(0); ii < (size_t) position.size(); ++ii) {
+	for (size_t jj(0); jj < (size_t) 7; ++jj) {
+          f << position[ii][jj] << " ";
+        }
+	for (size_t jj(0); jj < (size_t) 7; ++jj) {
+          f << torque[ii][jj] << " ";
+        }
+	for (size_t jj(0); jj < (size_t) 7; ++jj) {
+          f << ext_torque[ii][jj] << " ";
+        }
+        f << "\n";
+    }
+
 }
 
 void Static_collection::cleanupHook() {

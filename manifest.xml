@@ -8,5 +8,6 @@
     <depend package="rtt" />
     <depend package="rtt_sensor_msgs" />
     <depend package="lwr_fri" />
+    <depend package="kuka_lwr_fri" />
 </package>
 
