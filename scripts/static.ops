@@ -1,8 +1,25 @@
 import("data_collection")
+import("lwr_fri")
 
 loadComponent("static","Static_collection")
+loadComponent("lwr","lwr_fri::FRIComponent")
 
-setActivity("static", 0, 99, ORO_SCHED_RT)
+setActivity("static", 0.1, 99, ORO_SCHED_RT)
+setActivity("lwr",0, 99, ORO_SCHED_OTHER)
+lwr.udp_port=49938
+static.Filename = "test.txt"
 
 static.configure
+lwr.configure
 static.start
+lwr.start
+
+var ConnPolicy cp
+cp.type = DATA
+cp.lock_policy = LOCK_FREE
+
+connect("static.JointState","lwr.JointState",cp)
+connect("static.FriJointState","lwr.FriJointState",cp)
+connect("static.fromKRL","lwr.fromKRL",cp)
+connect("static.toKRL","lwr.toKRL",cp)
+connect("static.MassMatrix","lwr.MassMatrix",cp)

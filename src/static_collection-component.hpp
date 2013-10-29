@@ -25,6 +25,8 @@ class Static_collection : public RTT::TaskContext{
     sensor_msgs::JointState joint_state;
     InputPort<lwr_fri::FriJointState> port_fri_joint_state;
     lwr_fri::FriJointState fri_joint_state;
+    InputPort<lwr_fri::MassMatrix> port_mass_matrix;
+    lwr_fri::MassMatrix mass_matrix;
 
     InputPort<tFriKrlData> port_from_krl;
     OutputPort<tFriKrlData> port_to_krl;
@@ -34,7 +36,7 @@ class Static_collection : public RTT::TaskContext{
 
     std::vector< Eigen::Matrix<float, 7, 1> > position;
     std::vector< Eigen::Matrix<float, 7, 1> > torque;
-    std::vector< Eigen::Matrix<float, 7, 1> > ext_torque;
+    std::vector< Eigen::Matrix<float, 49, 1> > mass;
 
     std::string filename;
 };

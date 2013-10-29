@@ -9,6 +9,7 @@ Static_collection::Static_collection(std::string const& name) : TaskContext(name
   this->addPort("JointState", port_joint_state);
   //FriJointState
   this->addPort("FriJointState", port_fri_joint_state);
+  this->addPort("MassMatrix", port_mass_matrix);
 
   this->addPort("fromKRL", port_from_krl);
   this->addPort("toKRL", port_to_krl);
@@ -34,38 +35,40 @@ bool Static_collection::startHook(){
 
 void Static_collection::updateHook(){
 
-  port_from_krl.read(from_krl);  
+  if (port_from_krl.read(from_krl) == NewData ) {
 
    if (from_krl.intData[15] == 1 && to_krl.intData[15] == 0) {
     //Read Data
     port_joint_state.read(joint_state);
     port_fri_joint_state.read(fri_joint_state);
+    port_mass_matrix.read(mass_matrix);
 
     Eigen::Matrix<float, 7, 1> cur_pos;
     Eigen::Matrix<float, 7, 1> cur_torque;
-    Eigen::Matrix<float, 7, 1> cur_ext_torque;
     for (size_t ii(0); ii < (size_t) 7; ++ii) {
       cur_pos[ii] = joint_state.position[ii];
       cur_torque[ii] = fri_joint_state.gravity[ii];
-      cur_ext_torque[ii] = fri_joint_state.estExtJntTrq[ii];
+    }
+    Eigen::Matrix<float, 49, 1> cur_mass;
+    for (size_t ii(0); ii < (size_t) 49; ++ii) {
+      cur_mass[ii] = mass_matrix.mass[ii];
     }
     std::cout << "Position: " << cur_pos.transpose() << std::endl;
     std::cout << "Gravity: " << cur_torque.transpose() << std::endl;
-    std::cout << "External Torque: " << cur_ext_torque.transpose() << std::endl;
+    std::cout << "Mass: " << cur_mass.transpose() << std::endl;
 
     position.push_back(cur_pos);
     torque.push_back(cur_torque);
-    ext_torque.push_back(cur_ext_torque);
+    mass.push_back(cur_mass);
     
     to_krl.intData[15] = 1;
-    port_to_krl.write(to_krl);
    }
   else if (from_krl.intData[15] == 0 && to_krl.intData[15] == 1) {
     to_krl.intData[15] = 0;
-    port_to_krl.write(to_krl);
   }
 
-    this->trigger();
+  }
+    port_to_krl.write(to_krl);
   
 }
 
@@ -73,6 +76,7 @@ void Static_collection::stopHook() {
 
    std::ofstream f;
     f.open (filename.c_str());
+    f.precision(10);
 
     for (size_t ii(0); ii < (size_t) position.size(); ++ii) {
 	for (size_t jj(0); jj < (size_t) 7; ++jj) {
@@ -81,8 +85,8 @@ void Static_collection::stopHook() {
 	for (size_t jj(0); jj < (size_t) 7; ++jj) {
           f << torque[ii][jj] << " ";
         }
-	for (size_t jj(0); jj < (size_t) 7; ++jj) {
-          f << ext_torque[ii][jj] << " ";
+	for (size_t jj(0); jj < (size_t) 49; ++jj) {
+          f << mass[ii][jj] << " ";
         }
         f << "\n";
     }
